@@ -1,0 +1,4 @@
+.env*.local
+sticker.test.js
+README.md
+package.json
