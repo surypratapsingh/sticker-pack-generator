@@ -123,7 +123,12 @@ function update() {
   $('#download').disabled = n === 0;
   $('#empty').hidden = n > 0;
   $('#msg').textContent = n ? packProblems(n) : '';
-  stickers.forEach((s, i) => s.canvas.setAttribute('aria-label', `Sticker ${i + 1} preview`));
+  stickers.forEach((s, i) => {
+    s.canvas.setAttribute('aria-label', `Sticker ${i + 1} preview`);
+    // Same button text on every card, so name each one by its sticker.
+    s.card.querySelector('[data-act="one"]').setAttribute('aria-label', `Download sticker ${i + 1}`);
+    s.card.querySelector('[data-act="del"]').setAttribute('aria-label', `Remove sticker ${i + 1}`);
+  });
 }
 
 const byCard = (el) => stickers.find((s) => s.id === Number(el.closest('.card')?.dataset.id));
