@@ -1,4 +1,5 @@
 import { test } from 'node:test';
+import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 import { fitRect, removeBackground, addOutline, crc32, makeZip, slug, packProblems } from './sticker.js';
 
@@ -69,4 +70,10 @@ test('slug and pack size rules', () => {
   assert.match(packProblems(2), /at least 3/);
   assert.match(packProblems(31), /at most 30/);
   assert.equal(packProblems(3), '');
+});
+
+// FIX b74b1df: each card's Download button needs its own name. app.js is DOM code, so check the source.
+test('app.js names each Download button by its sticker', () => {
+  const src = readFileSync(new URL('./app.js', import.meta.url), 'utf8');
+  assert.match(src, /setAttribute\('aria-label', `Download sticker \$\{i \+ 1\}`\)/);
 });
