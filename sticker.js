@@ -155,6 +155,23 @@ export function makeZip(files) {
 
 export const slug = (s) => String(s ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'stickers';
 
+// Undo history for one sticker. Each entry is the value a field had before an edit.
+export const HISTORY_MAX = 50;
+export const MERGE_MS = 1000; // edits to the same field this close together (a slider drag) are one step
+
+// Returns a new history with the edit recorded. Repeated edits to one field merge into the first entry.
+export function recordEdit(history, field, before, now) {
+  const last = history[history.length - 1];
+  if (last && last.field === field && now - last.at < MERGE_MS) return [...history.slice(0, -1), { ...last, at: now }];
+  return [...history, { field, value: before, at: now }].slice(-HISTORY_MAX);
+}
+
+// The last entry and the history without it, or null when there is nothing to undo.
+export function undoEdit(history) {
+  if (!history.length) return null;
+  return { entry: history[history.length - 1], rest: history.slice(0, -1) };
+}
+
 export function packProblems(count) {
   if (count < MIN_PACK) return `WhatsApp needs at least ${MIN_PACK} stickers in a pack. Add ${MIN_PACK - count} more.`;
   if (count > MAX_PACK) return `WhatsApp allows at most ${MAX_PACK} stickers in a pack. Remove ${count - MAX_PACK}.`;
