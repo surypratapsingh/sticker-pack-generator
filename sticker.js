@@ -69,31 +69,40 @@ export function removeBackground(img, tolerance = 40) {
   return { width: w, height: h, data };
 }
 
-// Adds a solid die-cut outline `radius` px wide around everything that is not transparent.
-export function addOutline(img, radius, colour = [255, 255, 255]) {
+// Alpha of an outline pixel `d` px from the subject. feather 0 is a hard edge (always 1).
+// Otherwise alpha falls from 1 at (radius - feather) to 0 at the outer rim.
+export function featherAlpha(d, radius, feather) {
+  if (feather <= 0) return 1;
+  return Math.min(1, Math.max(0, (radius - d) / feather));
+}
+
+// Adds a die-cut outline `radius` px wide around everything that is not transparent.
+// With `feather` > 0 the outer `feather` px of the outline fade out instead of stopping hard.
+export function addOutline(img, radius, colour = [255, 255, 255], feather = 0) {
   const { width: w, height: h, data: src } = img;
   const data = new Uint8ClampedArray(src);
   if (radius <= 0) return { width: w, height: h, data };
   const solid = (x, y) => x >= 0 && y >= 0 && x < w && y < h && src[(y * w + x) * 4 + 3] >= 128;
   const disc = [];
   for (let dy = -radius; dy <= radius; dy++)
-    for (let dx = -radius; dx <= radius; dx++) if (dx * dx + dy * dy <= radius * radius) disc.push([dx, dy]);
-  const mask = new Uint8Array(w * h);
+    for (let dx = -radius; dx <= radius; dx++) if (dx * dx + dy * dy <= radius * radius) disc.push([dx, dy, Math.hypot(dx, dy)]);
+  // Distance from each pixel to the nearest edge pixel it was stamped from; Infinity = not in the outline.
+  const dist = new Float32Array(w * h).fill(Infinity);
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       // Only edge pixels stamp the disc; inner pixels are already covered.
       if (!solid(x, y) || (solid(x - 1, y) && solid(x + 1, y) && solid(x, y - 1) && solid(x, y + 1))) continue;
-      for (const [dx, dy] of disc) {
+      for (const [dx, dy, d] of disc) {
         const nx = x + dx, ny = y + dy;
-        if (nx >= 0 && ny >= 0 && nx < w && ny < h) mask[ny * w + nx] = 1;
+        if (nx >= 0 && ny >= 0 && nx < w && ny < h && d < dist[ny * w + nx]) dist[ny * w + nx] = d;
       }
     }
   for (let p = 0; p < w * h; p++) {
-    if (!mask[p]) continue;
+    if (dist[p] === Infinity) continue;
     const i = p * 4, a = data[i + 3] / 255;
     if (a === 1) continue;
     for (let c = 0; c < 3; c++) data[i + c] = Math.round(data[i + c] * a + colour[c] * (1 - a));
-    data[i + 3] = 255;
+    data[i + 3] = Math.round(Math.max(a, featherAlpha(dist[p], radius, feather)) * 255);
   }
   return { width: w, height: h, data };
 }
