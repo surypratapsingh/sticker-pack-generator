@@ -155,6 +155,21 @@ export function makeZip(files) {
 
 export const slug = (s) => String(s ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'stickers';
 
+export const TRAY_MAX_BYTES = 50 * 1024; // WhatsApp limit for the tray icon
+
+// Messages for files over the WhatsApp size limits. `files` are { name, data } as the ZIP gets them.
+export function sizeProblems(files) {
+  const out = [];
+  for (const f of files) {
+    const kb = Math.ceil(f.data.length / 1024);
+    if (f.name === 'tray.png' && f.data.length > TRAY_MAX_BYTES)
+      out.push(`tray.png is ${kb} KB. WhatsApp allows 50 KB for the tray icon.`);
+    else if (f.name.startsWith('sticker-') && f.data.length > MAX_BYTES)
+      out.push(`${f.name} is ${kb} KB. WhatsApp allows 100 KB per sticker. Try a simpler image.`);
+  }
+  return out;
+}
+
 export function packProblems(count) {
   if (count < MIN_PACK) return `WhatsApp needs at least ${MIN_PACK} stickers in a pack. Add ${MIN_PACK - count} more.`;
   if (count > MAX_PACK) return `WhatsApp allows at most ${MAX_PACK} stickers in a pack. Remove ${count - MAX_PACK}.`;

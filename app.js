@@ -1,4 +1,4 @@
-import { SIZE, TRAY, MAX_BYTES, MAX_PACK, fitRect, removeBackground, addOutline, makeZip, slug, packProblems } from './sticker.js';
+import { SIZE, TRAY, MAX_BYTES, MAX_PACK, fitRect, removeBackground, addOutline, makeZip, slug, packProblems, sizeProblems } from './sticker.js';
 
 const $ = (s) => document.querySelector(s);
 const grid = $('#grid');
@@ -195,6 +195,8 @@ $('#download').addEventListener('click', async (e) => {
     tray.getContext('2d').drawImage(stickers[0].canvas, 0, 0, TRAY, TRAY);
     const trayBlob = await new Promise((r) => tray.toBlob(r, 'image/png'));
     files.push({ name: 'tray.png', data: new Uint8Array(await trayBlob.arrayBuffer()) });
+    // Still exports, so the user can fix it; the message says what WhatsApp will reject.
+    $('#msg').textContent = [packProblems(stickers.length), ...sizeProblems(files)].filter(Boolean).join(' ');
     save(new Blob([makeZip(files)], { type: 'application/zip' }), `${slug($('#pack-name').value)}.zip`);
   } finally {
     btn.disabled = false;

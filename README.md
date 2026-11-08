@@ -35,3 +35,4 @@ Then open http://127.0.0.1:8080.
 - Background removal works for one plain background colour. A busy photo background needs a segmentation model.
 - Safari cannot encode WebP, so there it saves PNG.
 - WhatsApp needs a sticker-maker app to import a pack from files.
+- Before export, the message line warns when a sticker is over 100 KB or the tray icon is over 50 KB. The file is still written, so the user can fix it.
