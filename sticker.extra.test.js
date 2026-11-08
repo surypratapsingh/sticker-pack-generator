@@ -177,3 +177,16 @@ describe('packProblems', () => {
     assert.match(packProblems(1.5), /at least 3/);
   });
 });
+
+describe('empty and very long input (R9 item 14)', () => {
+  it('a 0 x 0 image still gets a whole-number box inside the square', () => {
+    const r = fitRect(0, 0);
+    for (const v of [r.x, r.y, r.w, r.h]) assert.ok(Number.isInteger(v), `${v} is not a whole number`);
+    assert.ok(r.w >= 1 && r.h >= 1 && r.x >= 0 && r.y >= 0 && r.x + r.w <= 512 && r.y + r.h <= 512);
+  });
+
+  it('a very tall image stays inside the square', () => {
+    const r = fitRect(1, 100000);
+    assert.ok(r.h <= 512 && r.y >= 0 && r.y + r.h <= 512 && r.w >= 1);
+  });
+});

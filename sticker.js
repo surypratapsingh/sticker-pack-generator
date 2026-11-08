@@ -10,6 +10,9 @@ export const MAX_PACK = 30;
 // Where to draw a w x h image inside a size x size square with `pad` px margin, keeping its shape.
 export function fitRect(w, h, size = SIZE, pad = 16) {
   const box = size - 2 * pad;
+  // A 0-size image (not decoded) would give NaN; treat it as 1 px.
+  w = Math.max(1, w);
+  h = Math.max(1, h);
   const s = Math.min(box / w, box / h);
   const dw = Math.max(1, Math.round(w * s));
   const dh = Math.max(1, Math.round(h * s));
