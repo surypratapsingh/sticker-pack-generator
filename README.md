@@ -16,6 +16,8 @@ Turn photos and short text into a sticker pack, in the browser. Nothing is uploa
 - `app.js`: canvas drawing, captions, WebP encoding and the page.
 - No framework, no build step, no dependencies.
 
+![CI](https://github.com/surypratapsingh/sticker-pack-generator/actions/workflows/ci.yml/badge.svg)
+
 ## Run and test
 Node 18 or newer.
 

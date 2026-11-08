@@ -150,7 +150,7 @@ export function makeZip(files) {
   return out;
 }
 
-export const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'stickers';
+export const slug = (s) => String(s ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'stickers';
 
 export function packProblems(count) {
   if (count < MIN_PACK) return `WhatsApp needs at least ${MIN_PACK} stickers in a pack. Add ${MIN_PACK - count} more.`;
