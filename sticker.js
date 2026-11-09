@@ -155,6 +155,30 @@ export function makeZip(files) {
 
 export const slug = (s) => String(s ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'stickers';
 
+export const MAX_NAME = 64; // characters in a pack title or author
+export const DEFAULT_TITLE = 'My stickers';
+export const DEFAULT_AUTHOR = 'Sticker Pack Generator';
+
+// One line, trimmed, at most MAX_NAME characters (code points, so emoji are not split), else the fallback.
+export function cleanName(s, fallback) {
+  const one = String(s ?? '').replace(/\s+/g, ' ').trim();
+  return Array.from(one).slice(0, MAX_NAME).join('').trim() || fallback;
+}
+
+export function packMeta(title, author) {
+  return { title: cleanName(title, DEFAULT_TITLE), author: cleanName(author, DEFAULT_AUTHOR) };
+}
+
+// Entries of a .wastickers pack: title.txt and author.txt (UTF-8) first, then the sticker and tray files.
+export function wastickersEntries(meta, files) {
+  const enc = new TextEncoder();
+  return [
+    { name: 'title.txt', data: enc.encode(meta.title) },
+    { name: 'author.txt', data: enc.encode(meta.author) },
+    ...files,
+  ];
+}
+
 export function packProblems(count) {
   if (count < MIN_PACK) return `WhatsApp needs at least ${MIN_PACK} stickers in a pack. Add ${MIN_PACK - count} more.`;
   if (count > MAX_PACK) return `WhatsApp allows at most ${MAX_PACK} stickers in a pack. Remove ${count - MAX_PACK}.`;

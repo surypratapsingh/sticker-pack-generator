@@ -1,4 +1,4 @@
-import { SIZE, TRAY, MAX_BYTES, MAX_PACK, fitRect, removeBackground, addOutline, makeZip, slug, packProblems } from './sticker.js';
+import { SIZE, TRAY, MAX_BYTES, MAX_PACK, fitRect, removeBackground, addOutline, makeZip, slug, packProblems, packMeta, wastickersEntries } from './sticker.js';
 
 const $ = (s) => document.querySelector(s);
 const grid = $('#grid');
@@ -121,6 +121,7 @@ function update() {
   const n = stickers.length;
   $('#count').textContent = `${n} / ${MAX_PACK}`;
   $('#download').disabled = n === 0;
+  $('#download-wa').disabled = n === 0;
   $('#empty').hidden = n > 0;
   $('#msg').textContent = n ? packProblems(n) : '';
   stickers.forEach((s, i) => {
@@ -180,26 +181,45 @@ drop.addEventListener('dragleave', () => drop.classList.remove('over'));
 drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('over'); addFiles(e.dataTransfer.files); });
 document.addEventListener('paste', (e) => addFiles([...e.clipboardData.files]));
 
-$('#download').addEventListener('click', async (e) => {
-  const btn = e.target;
+// The sticker WebP files and the tray icon, shared by both pack exports.
+async function packFiles() {
+  const files = [];
+  for (const [i, s] of stickers.entries()) {
+    const blob = await encode(s.canvas);
+    const ext = blob.type === 'image/webp' ? 'webp' : 'png';
+    files.push({ name: `sticker-${String(i + 1).padStart(2, '0')}.${ext}`, data: new Uint8Array(await blob.arrayBuffer()) });
+  }
+  const tray = Object.assign(document.createElement('canvas'), { width: TRAY, height: TRAY });
+  tray.getContext('2d').drawImage(stickers[0].canvas, 0, 0, TRAY, TRAY);
+  const trayBlob = await new Promise((r) => tray.toBlob(r, 'image/png'));
+  files.push({ name: 'tray.png', data: new Uint8Array(await trayBlob.arrayBuffer()) });
+  return files;
+}
+
+// Runs one export with its button disabled, then saves the bytes it returns.
+async function exportPack(btn, build) {
+  const idle = btn.textContent;
   btn.disabled = true;
   btn.textContent = 'Preparing…';
   try {
-    const files = [];
-    for (const [i, s] of stickers.entries()) {
-      const blob = await encode(s.canvas);
-      const ext = blob.type === 'image/webp' ? 'webp' : 'png';
-      files.push({ name: `sticker-${String(i + 1).padStart(2, '0')}.${ext}`, data: new Uint8Array(await blob.arrayBuffer()) });
-    }
-    const tray = Object.assign(document.createElement('canvas'), { width: TRAY, height: TRAY });
-    tray.getContext('2d').drawImage(stickers[0].canvas, 0, 0, TRAY, TRAY);
-    const trayBlob = await new Promise((r) => tray.toBlob(r, 'image/png'));
-    files.push({ name: 'tray.png', data: new Uint8Array(await trayBlob.arrayBuffer()) });
-    save(new Blob([makeZip(files)], { type: 'application/zip' }), `${slug($('#pack-name').value)}.zip`);
+    const { bytes, name } = await build();
+    save(new Blob([bytes], { type: 'application/zip' }), name);
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Download pack (.zip)';
+    btn.textContent = idle;
   }
-});
+}
+
+const packMetaFromForm = () => packMeta($('#pack-name').value, $('#pack-author').value);
+
+$('#download').addEventListener('click', (e) => exportPack(e.target, async () => ({
+  bytes: makeZip(await packFiles()),
+  name: `${slug(packMetaFromForm().title)}.zip`,
+})));
+
+$('#download-wa').addEventListener('click', (e) => exportPack(e.target, async () => {
+  const meta = packMetaFromForm();
+  return { bytes: makeZip(wastickersEntries(meta, await packFiles())), name: `${slug(meta.title)}.wastickers` };
+}));
 
 update();

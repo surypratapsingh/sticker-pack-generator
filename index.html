@@ -72,8 +72,11 @@
   <section class="pack" aria-label="Pack">
     <label for="pack-name">Pack name</label>
     <input id="pack-name" value="My stickers" maxlength="64">
+    <label for="pack-author">Author</label>
+    <input id="pack-author" value="" placeholder="Optional" maxlength="64">
     <span class="spacer"></span>
     <span id="count">0 / 30</span>
+    <button id="download-wa" disabled>Download .wastickers</button>
     <button class="primary" id="download" disabled>Download pack (.zip)</button>
   </section>
   <p class="msg" id="msg" role="status"></p>
@@ -87,6 +90,7 @@
       <li>Each sticker is 512 x 512 px WebP with a transparent background, kept under 100 KB (the WhatsApp limit).</li>
       <li>A 96 x 96 px <code>tray.png</code> icon made from the first sticker.</li>
       <li>One ZIP file. Import it with a sticker-maker app, or use the images in Telegram, Signal or Discord.</li>
+      <li>A <code>.wastickers</code> file: the same pack plus the name and author, for sticker-maker apps that import it directly.</li>
       <li>Safari cannot save WebP, so it saves PNG instead.</li>
     </ul>
   </section>
