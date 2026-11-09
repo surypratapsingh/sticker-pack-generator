@@ -1,4 +1,4 @@
-import { SIZE, TRAY, MAX_BYTES, MAX_PACK, fitRect, removeBackground, addOutline, makeZip, slug, packProblems } from './sticker.js';
+import { SIZE, TRAY, MAX_BYTES, MAX_PACK, fitRect, removeBackground, addOutline, makeZip, slug, packProblems, recordEdit, undoEdit } from './sticker.js';
 
 const $ = (s) => document.querySelector(s);
 const grid = $('#grid');
@@ -93,7 +93,7 @@ const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>'
 
 function add({ img = null, url = null, caption = '', colour = '#ffffff' }) {
   if (stickers.length >= MAX_PACK) { $('#msg').textContent = packProblems(MAX_PACK + 1); return; }
-  const s = { id: nextId++, img, url, caption, colour, removeBg: false, tolerance: 40, outline: img ? 10 : 0, place: img ? 'bottom' : 'middle' };
+  const s = { id: nextId++, img, url, caption, colour, removeBg: false, tolerance: 40, outline: img ? 10 : 0, place: img ? 'bottom' : 'middle', history: [] };
   s.card = document.createElement('article');
   s.card.className = 'card';
   s.card.dataset.id = s.id;
@@ -109,7 +109,7 @@ function add({ img = null, url = null, caption = '', colour = '#ffffff' }) {
       <label for="col${s.id}">Text colour</label><input id="col${s.id}" type="color" value="${colour}" data-f="colour">
     </div>
     <div class="foot"><span class="size">…</span><span class="spacer"></span>
-      <button data-act="one">Download</button><button data-act="del" aria-label="Remove sticker">Remove</button></div>`;
+      <button data-act="undo" disabled>Undo</button><button data-act="one">Download</button><button data-act="del" aria-label="Remove sticker">Remove</button></div>`;
   s.canvas = s.card.querySelector('canvas');
   stickers.push(s);
   grid.append(s.card);
@@ -127,6 +127,7 @@ function update() {
     s.canvas.setAttribute('aria-label', `Sticker ${i + 1} preview`);
     // Same button text on every card, so name each one by its sticker.
     s.card.querySelector('[data-act="one"]').setAttribute('aria-label', `Download sticker ${i + 1}`);
+    s.card.querySelector('[data-act="undo"]').setAttribute('aria-label', `Undo last edit on sticker ${i + 1}`);
     s.card.querySelector('[data-act="del"]').setAttribute('aria-label', `Remove sticker ${i + 1}`);
   });
 }
@@ -136,6 +137,8 @@ const byCard = (el) => stickers.find((s) => s.id === Number(el.closest('.card')?
 grid.addEventListener('input', (e) => {
   const s = byCard(e.target), f = e.target.dataset.f;
   if (!s || !f) return;
+  s.history = recordEdit(s.history, f, s[f], Date.now());
+  s.card.querySelector('[data-act="undo"]').disabled = false;
   s[f] = e.target.type === 'checkbox' ? e.target.checked : e.target.type === 'range' ? Number(e.target.value) : e.target.value;
   cancelAnimationFrame(s.frame);
   s.frame = requestAnimationFrame(() => render(s));
@@ -145,7 +148,17 @@ grid.addEventListener('click', async (e) => {
   const act = e.target.dataset.act, s = byCard(e.target);
   if (!act || !s) return;
   const n = stickers.indexOf(s) + 1;
-  if (act === 'one') {
+  if (act === 'undo') {
+    const r = undoEdit(s.history);
+    if (!r) return;
+    s.history = r.rest;
+    const { field, value } = r.entry;
+    s[field] = value;
+    const control = s.card.querySelector(`[data-f="${field}"]`);
+    if (control.type === 'checkbox') control.checked = value; else control.value = value;
+    s.card.querySelector('[data-act="undo"]').disabled = s.history.length === 0;
+    render(s);
+  } else if (act === 'one') {
     const blob = await encode(s.canvas);
     save(blob, `sticker-${String(n).padStart(2, '0')}.${blob.type === 'image/webp' ? 'webp' : 'png'}`);
   } else {

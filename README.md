@@ -9,6 +9,7 @@ Turn photos and short text into a sticker pack, in the browser. Nothing is uploa
 - **Remove plain background:** clears the main border colour where it touches the edge. A tolerance slider controls how close a colour must be.
 - **Die-cut outline:** a white border 0 to 16 px wide around the sticker.
 - **Caption:** text at the top, middle or bottom, sized to fit, with a contrasting stroke.
+- **Undo:** each sticker has an Undo button for its last change. A slider drag counts as one change; the last 50 changes are kept per sticker.
 - **Export:** each sticker is 512 x 512 px WebP with a transparent background. WebP quality steps down until the file is under 100 KB (the WhatsApp limit). The pack is one ZIP with the stickers and a 96 x 96 `tray.png`. It warns when a pack has fewer than 3 or more than 30 stickers (the WhatsApp rules).
 
 ## How it works
