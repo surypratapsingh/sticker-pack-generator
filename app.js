@@ -100,7 +100,7 @@ function add({ img = null, url = null, caption = '', colour = '#ffffff' }) {
   s.card.innerHTML = `
     <canvas width="${SIZE}" height="${SIZE}" role="img" aria-label="Sticker preview"></canvas>
     <div class="ctl">
-      ${img ? `<label for="bg${s.id}">Background</label><label><input id="bg${s.id}" type="checkbox" data-f="removeBg"> Remove plain background</label>
+      ${img ? `<label for="bg${s.id}">Remove background</label><input id="bg${s.id}" type="checkbox" data-f="removeBg">
       <label for="tol${s.id}">Tolerance</label><input id="tol${s.id}" type="range" min="5" max="120" value="40" data-f="tolerance">` : ''}
       <label for="out${s.id}">Outline</label><input id="out${s.id}" type="range" min="0" max="16" value="${s.outline}" data-f="outline">
       <label for="cap${s.id}">Caption</label><input id="cap${s.id}" type="text" maxlength="60" value="${esc(caption)}" placeholder="Optional text" data-f="caption">
@@ -149,10 +149,14 @@ grid.addEventListener('click', async (e) => {
     const blob = await encode(s.canvas);
     save(blob, `sticker-${String(n).padStart(2, '0')}.${blob.type === 'image/webp' ? 'webp' : 'png'}`);
   } else {
-    stickers.splice(n - 1, 1);
+    const idx = stickers.indexOf(s);
+    stickers.splice(idx, 1);
     s.card.remove();
     if (s.url) URL.revokeObjectURL(s.url);
     update();
+    // The removed card's buttons are gone, so put the keyboard on the next card instead.
+    const dels = grid.querySelectorAll('.card [data-act="del"]');
+    (dels[Math.min(idx, dels.length - 1)] ?? $('#choose')).focus();
   }
 });
 
