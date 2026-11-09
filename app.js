@@ -62,7 +62,7 @@ function render(s) {
   }
   if (s.caption.trim()) drawCaption(ctx, s);
   if (s.outline) {
-    const out = addOutline(ctx.getImageData(0, 0, SIZE, SIZE), s.outline);
+    const out = addOutline(ctx.getImageData(0, 0, SIZE, SIZE), s.outline, [255, 255, 255], s.feather);
     ctx.putImageData(new ImageData(out.data, SIZE, SIZE), 0, 0);
   }
   clearTimeout(s.sizeTimer);
@@ -93,7 +93,7 @@ const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>'
 
 function add({ img = null, url = null, caption = '', colour = '#ffffff' }) {
   if (stickers.length >= MAX_PACK) { $('#msg').textContent = packProblems(MAX_PACK + 1); return; }
-  const s = { id: nextId++, img, url, caption, colour, removeBg: false, tolerance: 40, outline: img ? 10 : 0, place: img ? 'bottom' : 'middle' };
+  const s = { id: nextId++, img, url, caption, colour, removeBg: false, tolerance: 40, outline: img ? 10 : 0, feather: 0, place: img ? 'bottom' : 'middle' };
   s.card = document.createElement('article');
   s.card.className = 'card';
   s.card.dataset.id = s.id;
@@ -103,6 +103,7 @@ function add({ img = null, url = null, caption = '', colour = '#ffffff' }) {
       ${img ? `<label for="bg${s.id}">Background</label><label><input id="bg${s.id}" type="checkbox" data-f="removeBg"> Remove plain background</label>
       <label for="tol${s.id}">Tolerance</label><input id="tol${s.id}" type="range" min="5" max="120" value="40" data-f="tolerance">` : ''}
       <label for="out${s.id}">Outline</label><input id="out${s.id}" type="range" min="0" max="16" value="${s.outline}" data-f="outline">
+      <label for="fea${s.id}">Soft edge</label><input id="fea${s.id}" type="range" min="0" max="16" value="0" data-f="feather">
       <label for="cap${s.id}">Caption</label><input id="cap${s.id}" type="text" maxlength="60" value="${esc(caption)}" placeholder="Optional text" data-f="caption">
       <label for="pl${s.id}">Position</label><select id="pl${s.id}" data-f="place">
         ${['top', 'middle', 'bottom'].map((p) => `<option${p === s.place ? ' selected' : ''}>${p}</option>`).join('')}</select>
