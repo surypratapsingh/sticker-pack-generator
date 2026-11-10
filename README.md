@@ -10,7 +10,10 @@ Turn photos and short text into a sticker pack, in the browser. Nothing is uploa
 - **Die-cut outline:** a white border 0 to 16 px wide around the sticker. **Soft edge** (0 to 16 px) fades its outer rim instead of stopping hard.
 - **Caption:** text at the top, middle or bottom, sized to fit, with a contrasting stroke.
 - **Undo:** each sticker has an Undo button for its last change. A slider drag counts as one change; the last 50 changes are kept per sticker.
-- **Export:** each sticker is 512 x 512 px WebP with a transparent background. WebP quality steps down until the file is under 100 KB (the WhatsApp limit). The pack is one ZIP with the stickers and a 96 x 96 `tray.png`. It warns when a pack has fewer than 3 or more than 30 stickers (the WhatsApp rules).
+- **Pack name and author:** two fields, both up to 64 characters. Blank values fall back to "My stickers" and "Sticker Pack Generator".
+- **Export:** each sticker is 512 x 512 px WebP with a transparent background. WebP quality steps down until the file is under 100 KB (the WhatsApp limit). It warns when a pack has fewer than 3 or more than 30 stickers (the WhatsApp rules).
+  - **Download pack (.zip):** the stickers and a 96 x 96 `tray.png`, as before.
+  - **Download .wastickers:** the same files plus `title.txt` and `author.txt` (UTF-8), in a flat ZIP named after the pack. Sticker-maker apps such as Sticker Maker can import it.
 
 ## How it works
 - `sticker.js`: pure functions with no DOM: fit-to-square maths, flood-fill background removal, outline, CRC-32 and a small ZIP writer (stored, no compression, because WebP and PNG are compressed already).
@@ -37,3 +40,5 @@ Then open http://127.0.0.1:8080.
 - Safari cannot encode WebP, so there it saves PNG.
 - WhatsApp needs a sticker-maker app to import a pack from files.
 - Before export, the message line warns when a sticker is over 100 KB or the tray icon is over 50 KB. The file is still written, so the user can fix it.
+- The `.wastickers` layout (flat ZIP with `title.txt`, `author.txt`, WebP stickers and a tray PNG) comes from community tools, not an official spec, so a future app update could change it. The ZIP stays as a fallback.
+- Pack name and author are limited to 64 characters each and kept to one line.
