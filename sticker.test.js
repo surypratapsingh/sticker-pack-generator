@@ -77,3 +77,11 @@ test('app.js names each Download button by its sticker', () => {
   const src = readFileSync(new URL('./app.js', import.meta.url), 'utf8');
   assert.match(src, /setAttribute\('aria-label', `Download sticker \$\{i \+ 1\}`\)/);
 });
+
+// FIX (FB-CI R8): one label per control, and keyboard focus lands on a control after Remove.
+test('app.js labels the background checkbox once and keeps focus after a removal', () => {
+  const src = readFileSync(new URL('./app.js', import.meta.url), 'utf8');
+  assert.match(src, /<label for="bg\$\{s\.id\}">Remove background<\/label><input id="bg\$\{s\.id\}" type="checkbox"/);
+  assert.doesNotMatch(src, /<label for="bg\$\{s\.id\}">Background<\/label>/);
+  assert.match(src, /\(dels\[Math\.min\(idx, dels\.length - 1\)\] \?\? \$\('#choose'\)\)\.focus\(\)/);
+});
